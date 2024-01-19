@@ -1,0 +1,2 @@
+# IoT-Cotton-Plant-Detection-diseases-and-Smart-Response-System
+The system detects an insect or disease, the data is sent to the Arduino to take action. If the system detects a disease, the pump sprays fungicide. If the system detects an insect, the pump sprays pesticide. The system also continuously measures soil moisture, and if it drops below a certain threshold, the pump starts spraying water.
