@@ -7,6 +7,7 @@ void setup() {
   Serial.begin(9600); // Initialize serial communication
 }
 
+
 void loop() {
   water = digitalRead(6); // Read the signal from the soil moisture sensor connected to pin 6
   
