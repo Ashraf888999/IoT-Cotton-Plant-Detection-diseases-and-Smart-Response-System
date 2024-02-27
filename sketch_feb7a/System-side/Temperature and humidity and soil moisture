@@ -1,0 +1,88 @@
+#include <DHT.h>
+#include <DHT_U.h>
+#include <Adafruit_Sensor.h>
+
+// Define DHT sensor pins and type
+#define DHTPIN A0 // Replace with the actual pin connected to the DHT sensor
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+int water; // Variable to store the signal from the soil moisture sensor
+float waterPercentage; // Variable to store the calculated water percentage
+bool pumpOn = false; // Variable to track if the pump is currently on
+
+// Define variables for sensor readings in dry and wet conditions
+const int SENSOR_DRY = 0; // Replace with the actual dry condition sensor reading
+const int SENSOR_WET = 1023; // Replace with the actual wet condition sensor reading
+
+void setup() {
+  pinMode(3, OUTPUT); // Set pin 3 as an output for the relay board
+  pinMode(6, INPUT);  // Set pin 6 as an input for the soil moisture sensor
+  Serial.begin(9600); // Initialize serial communication
+  dht.begin(); // Initialize DHT sensor
+
+  // Add a delay after initializing the DHT sensor for stabilization
+  delay(2000); // Wait for the sensor to stabilize
+}
+
+void loop() {
+  water = digitalRead(6); // Read the signal from the soil moisture sensor connected to pin 6
+  
+  if (water == HIGH) {
+    // If the water level is full (soil is wet), cut the relay by setting pin 3 LOW
+    digitalWrite(3, LOW);
+    pumpOn = false;
+    Serial.println("Pump on"); // Print "Pump on" to serial monitor
+  } else {
+    // If the water level is not full (soil is dry), continue providing signal and water supply by setting pin 3 HIGH
+    digitalWrite(3, HIGH);
+    pumpOn = true;
+    Serial.println("Pump off"); // Print "Pump off" to serial monitor
+  }
+  
+  // Calculate water percentage
+  int sensorValue = analogRead(A0); // Read sensor value from analog pin A0
+  waterPercentage = map(sensorValue, SENSOR_DRY, SENSOR_WET, 0, 100); // Map sensor value to percentage scale
+  
+  // Adjusting for sensor calibration
+  waterPercentage = constrain(waterPercentage, 0, 100); // Ensure the percentage is within 0-100 range
+  
+  Serial.print("Water percentage: ");
+  Serial.print(waterPercentage);
+  Serial.println("%"); // Print water percentage to serial monitor
+  
+  // Read temperature and humidity from DHT sensor
+  float humidity = dht.readHumidity();
+  float temperature = dht.readTemperature();
+
+  // Check if the readings are valid
+  if (isnan(humidity) || isnan(temperature)) {
+    Serial.println("Failed to read from DHT sensor!");
+  } else {
+    Serial.print("Temperature: ");
+    Serial.print(temperature);
+    Serial.print("°C, Humidity: ");
+    Serial.print(humidity);
+    Serial.println("%");
+  }
+  
+  // Troubleshooting DHT11 sensor
+  if (isnan(humidity) && isnan(temperature)) {
+    Serial.println("Check DHT11 sensor wiring and power supply!"); // Print troubleshooting message
+  }
+  
+  // Check if waterPercentage is less than or equal to 40%
+  if (waterPercentage <= 40) {
+    // If soil moisture is less than or equal to 40%, turn off the pump
+    digitalWrite(3, LOW);
+    pumpOn = false;
+    Serial.println("Pump off due to water level reached 40%"); // Print reason to serial monitor
+  }
+  
+  // Check if pump is still on and water percentage exceeds 60%
+  if (pumpOn && waterPercentage > 60) {
+    Serial.println("WARNING ‼ Water is high, please check the system"); // Print warning to serial monitor
+  }
+  
+  delay(400); // Delay for stability
+}
