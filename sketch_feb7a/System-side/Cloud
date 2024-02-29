@@ -1,13 +1,17 @@
-#include <dummy.h>
-
 #include <DHT.h>
 #include <DHT_U.h>
 #include <Adafruit_Sensor.h>
+#include <ESP8266WiFi.h>
 
 // Define DHT sensor pins and type
 #define DHTPIN A0 // Replace with the actual pin connected to the DHT sensor
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
+
+const char* ssid = "Elshami";
+const char* password = "l4070245";
+
+WiFiClient client;
 
 int water; // Variable to store the signal from the soil moisture sensor
 float waterPercentage; // Variable to store the calculated water percentage
@@ -22,6 +26,14 @@ void setup() {
   pinMode(6, INPUT);  // Set pin 6 as an input for the soil moisture sensor
   Serial.begin(9600); // Initialize serial communication
   dht.begin(); // Initialize DHT sensor
+
+  // Connect to WiFi network
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+  Serial.println("Connected to WiFi");
 
   // Add a delay after initializing the DHT sensor for stabilization
   delay(2000); // Wait for the sensor to stabilize
